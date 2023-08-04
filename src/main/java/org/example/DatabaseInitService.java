@@ -1,11 +1,12 @@
 package org.example;
+
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.nio.file.Path;
 
 public class DatabaseInitService {
     public static void main(String[] args) {
@@ -39,14 +40,14 @@ public class DatabaseInitService {
             for (String statement : statements) {
                 String trimmedStatement = statement.trim();
                 if (!trimmedStatement.isEmpty()) {
-
                     preparedStatement.addBatch(trimmedStatement);
                 }
             }
+
+            preparedStatement.setString(1, "John Doe");
+            preparedStatement.setDate(2, java.sql.Date.valueOf("2000-01-15"));
+
             preparedStatement.executeBatch();
         }
     }
 }
-
-
-

@@ -1,12 +1,12 @@
 package org.example;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class DatabasePopulateService {
     public static void main(String[] args) {
@@ -33,16 +33,23 @@ public class DatabasePopulateService {
 
     private static void executeScript(String script) throws SQLException {
         Connection connection = Database.getInstance().getConnection();
+
+        // Split the script into separate statements
         String[] statements = script.split(";");
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement("")) {
+        try {
             for (String statement : statements) {
-                String trimmedStatement = statement.trim();
-                if (!trimmedStatement.isEmpty()) {
-                    preparedStatement.addBatch(trimmedStatement);
+                statement = statement.trim();
+                if (!statement.isEmpty()) {
+                    try (PreparedStatement preparedStatement = connection.prepareStatement(statement)) {
+                        preparedStatement.setInt(1, 123);
+                        preparedStatement.setString(2, "Some Value");
+                     preparedStatement.executeUpdate();
+                    }
                 }
             }
-            preparedStatement.executeBatch();
+        } finally {
+            connection.close();
         }
     }
 }
