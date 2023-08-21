@@ -42,8 +42,6 @@ public class DatabasePopulateService {
                 statement = statement.trim();
                 if (!statement.isEmpty()) {
                     try (PreparedStatement preparedStatement = connection.prepareStatement(statement)) {
-                        preparedStatement.setInt(1, 123);
-                        preparedStatement.setString(2, "Some Value");
                      preparedStatement.executeUpdate();
                     }
                 }

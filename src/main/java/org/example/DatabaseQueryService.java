@@ -12,53 +12,55 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DatabaseQueryService {
-    public List<MaxProjectCountClient> findMaxProjectsClient() {
+    public List<MaxProjectCountClient> findMaxProjectsClient(int clientId) {
         List<MaxProjectCountClient> result = new ArrayList<>();
-
         try {
             Connection connection = Database.getInstance().getConnection();
-            String sql = readScript("sql/find_max_projects_client.sql");
+            String sql = "SELECT c.NAME, COUNT(p.ID) AS PROJECT_COUNT " +
+                    "FROM client c " +
+                    "LEFT JOIN project p ON c.ID = p.CLIENT_ID " +
+                    "GROUP BY c.ID, c.NAME " +
+                    "HAVING COUNT(p.ID) = (SELECT MAX(project_count) FROM (SELECT COUNT(ID) AS project_count FROM project WHERE CLIENT_ID = ?) AS subquery)";
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, clientId);
+
+                ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int projectCount = resultSet.getInt("PROJECT_COUNT");
                     result.add(new MaxProjectCountClient(name, projectCount));
                 }
             }
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return result;
     }
 
     public List<MaxSalaryWorker> findMaxSalaryWorkers() {
         List<MaxSalaryWorker> result = new ArrayList<>();
+        try (Connection connection = Database.getInstance().getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(
+                     "SELECT w.NAME, w.SALARY " +
+                             "FROM worker w " +
+                             "WHERE w.SALARY = (SELECT MAX(SALARY) FROM worker)")) {
 
-        try {
-            Connection connection = Database.getInstance().getConnection();
-            String sql = readScript("sql/find_max_salary_worker.sql");
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int salary = resultSet.getInt("SALARY");
                     result.add(new MaxSalaryWorker(name, salary));
                 }
             }
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return result;
     }
 
     public List<LongestProject> findLongestProjects() {
         List<LongestProject> result = new ArrayList<>();
-
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/find_longest_project.sql");
@@ -80,7 +82,6 @@ public class DatabaseQueryService {
 
     public List<YoungestEldestWorker> findYoungestAndEldestWorkers() {
         List<YoungestEldestWorker> result = new ArrayList<>();
-
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/find_youngest_eldest_workers.sql");
@@ -103,7 +104,6 @@ public class DatabaseQueryService {
 
     public List<ProjectPrice> printProjectPrices() {
         List<ProjectPrice> result = new ArrayList<>();
-
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/print_project_prices.sql");

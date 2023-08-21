@@ -32,22 +32,13 @@ public class DatabaseInitService {
     }
 
     private static void executeScript(String script) throws SQLException {
-        Connection connection = Database.getInstance().getConnection();
+        try (Connection connection = Database.getInstance().getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(script)) {
 
-        String[] statements = script.split(";");
-
-        try (PreparedStatement preparedStatement = connection.prepareStatement("")) {
-            for (String statement : statements) {
-                String trimmedStatement = statement.trim();
-                if (!trimmedStatement.isEmpty()) {
-                    preparedStatement.addBatch(trimmedStatement);
-                }
-            }
-
-            preparedStatement.setString(1, "John Doe");
-            preparedStatement.setDate(2, java.sql.Date.valueOf("2000-01-15"));
-
-            preparedStatement.executeBatch();
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            System.err.println("Failed to execute the SQL script.");
+            e.printStackTrace();
         }
     }
 }
