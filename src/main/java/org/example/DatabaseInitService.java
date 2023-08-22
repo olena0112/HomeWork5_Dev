@@ -1,12 +1,11 @@
 package org.example;
-
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.nio.file.Path;
 
 public class DatabaseInitService {
     public static void main(String[] args) {
@@ -32,13 +31,9 @@ public class DatabaseInitService {
     }
 
     private static void executeScript(String script) throws SQLException {
-        try (Connection connection = Database.getInstance().getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(script)) {
-
-            preparedStatement.execute();
-        } catch (SQLException e) {
-            System.err.println("Failed to execute the SQL script.");
-            e.printStackTrace();
+        Connection connection = Database.getInstance().getConnection();
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(script);
         }
     }
 }

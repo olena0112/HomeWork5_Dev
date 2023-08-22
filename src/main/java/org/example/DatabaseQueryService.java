@@ -1,72 +1,71 @@
 package org.example;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 
 public class DatabaseQueryService {
-    public List<MaxProjectCountClient> findMaxProjectsClient(int clientId) {
+    public List<MaxProjectCountClient> findMaxProjectsClient() {
         List<MaxProjectCountClient> result = new ArrayList<>();
+
         try {
             Connection connection = Database.getInstance().getConnection();
-            String sql = "SELECT c.NAME, COUNT(p.ID) AS PROJECT_COUNT " +
-                    "FROM client c " +
-                    "LEFT JOIN project p ON c.ID = p.CLIENT_ID " +
-                    "GROUP BY c.ID, c.NAME " +
-                    "HAVING COUNT(p.ID) = (SELECT MAX(project_count) FROM (SELECT COUNT(ID) AS project_count FROM project WHERE CLIENT_ID = ?) AS subquery)";
+            String sql = readScript("sql/find_max_projects_client.sql");
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, clientId);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int projectCount = resultSet.getInt("PROJECT_COUNT");
                     result.add(new MaxProjectCountClient(name, projectCount));
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
     public List<MaxSalaryWorker> findMaxSalaryWorkers() {
         List<MaxSalaryWorker> result = new ArrayList<>();
-        try (Connection connection = Database.getInstance().getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(
-                     "SELECT w.NAME, w.SALARY " +
-                             "FROM worker w " +
-                             "WHERE w.SALARY = (SELECT MAX(SALARY) FROM worker)")) {
 
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+        try {
+            Connection connection = Database.getInstance().getConnection();
+            String sql = readScript("sql/find_max_salary_worker.sql");
+
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int salary = resultSet.getInt("SALARY");
                     result.add(new MaxSalaryWorker(name, salary));
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
+
         return result;
     }
 
     public List<LongestProject> findLongestProjects() {
         List<LongestProject> result = new ArrayList<>();
+
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/find_longest_project.sql");
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int monthCount = resultSet.getInt("MONTH_COUNT");
@@ -82,12 +81,13 @@ public class DatabaseQueryService {
 
     public List<YoungestEldestWorker> findYoungestAndEldestWorkers() {
         List<YoungestEldestWorker> result = new ArrayList<>();
+
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/find_youngest_eldest_workers.sql");
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String type = resultSet.getString("TYPE");
                     String name = resultSet.getString("NAME");
@@ -104,12 +104,13 @@ public class DatabaseQueryService {
 
     public List<ProjectPrice> printProjectPrices() {
         List<ProjectPrice> result = new ArrayList<>();
+
         try {
             Connection connection = Database.getInstance().getConnection();
             String sql = readScript("sql/print_project_prices.sql");
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
-                 ResultSet resultSet = preparedStatement.executeQuery()) {
+            try (Statement statement = connection.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("NAME");
                     int price = resultSet.getInt("PRICE");
