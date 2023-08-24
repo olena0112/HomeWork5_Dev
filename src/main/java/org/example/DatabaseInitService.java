@@ -10,7 +10,6 @@ import java.nio.file.Path;
 public class DatabaseInitService {
     public static void main(String[] args) {
         String initScriptPath = "sql/init_db.sql";
-
         try {
             String initScript = readScript(initScriptPath);
             executeScript(initScript);
@@ -23,13 +22,11 @@ public class DatabaseInitService {
             e.printStackTrace();
         }
     }
-
     private static String readScript(String scriptPath) throws IOException {
         Path path = Paths.get(scriptPath);
         byte[] bytes = Files.readAllBytes(path);
         return new String(bytes);
     }
-
     private static void executeScript(String script) throws SQLException {
         Connection connection = Database.getInstance().getConnection();
         try (Statement statement = connection.createStatement()) {
